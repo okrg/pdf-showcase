@@ -5,7 +5,8 @@ from typing import List, Tuple, Literal, Optional
 
 import numpy as np
 import fitz  # PyMuPDF
-from moviepy.editor import ImageClip, CompositeVideoClip
+import moviepy
+from moviepy import ImageClip, CompositeVideoClip
 
 
 class PDFValidationError(ValueError):
@@ -165,7 +166,7 @@ def generate_preview(
     # Build ImageClips with durations
     clips: List[ImageClip] = []
     for i, frame in enumerate(frames):
-        clip = ImageClip(frame).set_duration(per_page)
+        clip = ImageClip(frame).with_duration(per_page)
         if i > 0 and crossfade > 0:
             # We'll apply crossfade-in via CompositeVideoClip start times later
             pass
@@ -173,18 +174,18 @@ def generate_preview(
 
     # Crossfade via CompositeVideoClip with overlapping starts
     if len(clips) == 1 or crossfade <= 0:
-        final = CompositeVideoClip([clips[0].set_start(0)], size=(target_w, target_h)).set_duration(per_page)
+        final = CompositeVideoClip([clips[0].with_start(0)], size=(target_w, target_h)).with_duration(per_page)
     else:
         placed = []
         for i, c in enumerate(clips):
             start = i * (per_page - crossfade)
             if i > 0:
-                c = c.set_start(start).crossfadein(crossfade)
+                c = c.with_start(start).with_effects([moviepy.vfx.FadeIn(crossfade)])
             else:
-                c = c.set_start(start)
+                c = c.with_start(start)
             placed.append(c)
         total_duration = (len(clips) - 1) * (per_page - crossfade) + per_page
-        final = CompositeVideoClip(placed, size=(target_w, target_h)).set_duration(total_duration)
+        final = CompositeVideoClip(placed, size=(target_w, target_h)).with_duration(total_duration)
 
     # Write outputs
     os.makedirs(os.path.dirname(output_basename), exist_ok=True)
