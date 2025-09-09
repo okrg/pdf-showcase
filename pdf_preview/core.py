@@ -5,6 +5,7 @@ from typing import List, Tuple, Literal, Optional
 
 import numpy as np
 import fitz  # PyMuPDF
+
 import moviepy
 from moviepy import ImageClip, CompositeVideoClip
 
@@ -187,8 +188,11 @@ def generate_preview(
         total_duration = (len(clips) - 1) * (per_page - crossfade) + per_page
         final = CompositeVideoClip(placed, size=(target_w, target_h), bg_color=(255, 255, 255)).with_duration(total_duration)
 
+
     # Write outputs
-    os.makedirs(os.path.dirname(output_basename), exist_ok=True)
+    output_dir = os.path.dirname(output_basename)
+    if output_dir:  # Only create directory if there's a directory component
+        os.makedirs(output_dir, exist_ok=True)
     fmt = format.lower()
     if fmt not in {"gif", "mp4", "all"}:
         raise ValueError('format must be one of: "gif", "mp4", "all".')
@@ -200,7 +204,7 @@ def generate_preview(
 
     if fmt in {"mp4", "all"}:
         mp4_path = f"{output_basename}.mp4"
-        final.write_videofile(mp4_path, codec="libx264", audio=False, fps=fps_mp4, preset="medium", threads=os.cpu_count() or 1)
+        final.write_videofile(mp4_path, codec="libx264", audio=False, fps=fps_mp4)
         outputs.append(mp4_path)
 
     final.close()
