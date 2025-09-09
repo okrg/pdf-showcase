@@ -6,9 +6,10 @@ Generate a short animated preview from a PDF as a GIF or MP4. Available via CLI 
 
 - PDF processing with PyMuPDF (fitz)
 - Animation generation with MoviePy
-- Smooth crossfade transitions
+- **Bright, smooth crossfade transitions** using CrossFadeIn for professional-looking page transitions
 - CLI and Web UI
 - Configurable output format, duration, and dimensions
+- White background preservation during transitions (no dark flashes)
 - Temporary outputs with a daily cleanup recommendation
 
 ---
@@ -41,7 +42,7 @@ pip install -r requirements.txt
 ## CLI Usage
 
 ```bash
-python generate.py report.pdf --output my_preview --max-duration 8 --format mp4 --dimensions 480x640
+python generate.py report.pdf --output my_preview --max-duration 8 --format mp4 --size large
 ```
 
 Arguments:
@@ -50,12 +51,15 @@ Arguments:
 - `--output`: Base name for the output (no extension). Default: `<input_basename>_preview` in CWD.
 - `--max-duration`: Maximum length in seconds (default: 10).
 - `--format`: `gif`, `mp4`, or `all` (default: `gif`).
-- `--dimensions`: `WIDTHxHEIGHT` string (default: `480x640`).
+- `--size`: Output size preset: `small` (320×480), `medium` (480×640), `large` (720×960) (default: `medium`).
+- `--crossfade`: Crossfade duration between pages in seconds (default: 0.15). Uses bright CrossFadeIn transitions.
 
 Validation rules:
 
 - Max file size: 25 MB
 - Max page count: 100 pages
+
+**Crossfade Quality:** The tool uses MoviePy's `CrossFadeIn` effect for smooth, bright transitions between pages. This prevents the dark flashing that can occur with standard fade effects, maintaining a professional appearance with consistent white background visibility.
 
 When the PDF is longer than the maximum duration allows (with a minimum per-page display time of 0.4s), the tool samples pages evenly, always including the first and last pages.
 
@@ -72,7 +76,7 @@ python app.py
 # Then open http://localhost:5000
 ```
 
-- Upload a PDF, choose format, duration, and dimensions.
+- Upload a PDF, choose format, duration, and size preset.
 - Results are shown with inline preview and download links.
 - Files are written to the `output/` directory.
 
@@ -122,10 +126,13 @@ Windows Task Scheduler alternative:
 
 ## Development Notes
 
-- Core function: `pdf_preview.core.generate_preview(pdf_path, output_basename, max_duration, format, dimensions, ...)`
-- Crossfade duration defaults to 0.15s. Minimum per-page display time is 0.4s.
+- Core function: `pdf_preview.core.generate_preview(pdf_path, output_basename, max_duration, format, dimensions, crossfade, ...)`
+- **Size presets:** "small" (320×480), "medium" (480×640), "large" (720×960). Custom dimensions still supported for backward compatibility.
+- **Crossfade implementation:** Uses `moviepy.vfx.CrossFadeIn` for bright, professional transitions. Default duration is 0.15s.
+- Minimum per-page display time is 0.4s.
 - MP4 is encoded with H.264 (`libx264`) at 24 fps, GIF at 15 fps.
 - The renderer pads images to match the desired output dimensions while preserving aspect ratio.
+- **White background:** All animations maintain a bright white (`#ffffff`) background throughout, preventing dark flashes during transitions.
 
 ---
 

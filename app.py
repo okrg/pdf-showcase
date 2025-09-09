@@ -48,7 +48,9 @@ def index():
     if fmt not in {"gif", "mp4"}:
         return render_template("index.html", error="Invalid format selected.")
 
-    dimensions = request.form.get("dimensions", "480x640")
+    size = request.form.get("size", "medium").lower()
+    if size not in {"small", "medium", "large"}:
+        return render_template("index.html", error="Invalid size selected.")
 
     # Save to temp dir
     unique_id = str(uuid.uuid4())
@@ -68,7 +70,7 @@ def index():
             output_basename=output_basename,
             max_duration=max_duration,
             format=fmt,  # single format (UI offers gif or mp4)
-            dimensions=dimensions,
+            dimensions=size,
         )
     except PDFValidationError as e:
         return render_template("index.html", error=str(e))

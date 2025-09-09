@@ -5,12 +5,14 @@ from pdf_preview.core import generate_preview, PDFValidationError
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="Generate an animated preview (GIF/MP4) from a PDF.")
+    parser = argparse.ArgumentParser(description="Generate an animated preview (GIF/MP4) from a PDF with bright crossfade transitions.")
     parser.add_argument("input_file", help="Path to the input PDF file.")
     parser.add_argument("--output", default=None, help="Base name for output file(s) (without extension). Default is input filename in current directory.")
     parser.add_argument("--max-duration", type=float, default=10.0, help="Maximum duration in seconds (default: 10).")
     parser.add_argument("--format", choices=["gif", "mp4", "all"], default="gif", help='Output format (default: "gif").')
-    parser.add_argument("--dimensions", default="480x640", help='Dimensions as "WIDTHxHEIGHT" (default: "480x640").')
+    parser.add_argument("--size", choices=["small", "medium", "large"], default="medium", 
+                       help='Output size preset: "small" (320x480), "medium" (480x640), "large" (720x960) (default: "medium").')
+    parser.add_argument("--crossfade", type=float, default=0.15, help="Crossfade duration between pages in seconds (default: 0.15). Uses bright CrossFadeIn transitions.")
     return parser.parse_args()
 
 
@@ -32,7 +34,8 @@ def main():
             output_basename=output_basename,
             max_duration=args.max_duration,
             format=args.format,
-            dimensions=args.dimensions,
+            dimensions=args.size,
+            crossfade=args.crossfade,
         )
         print("Success! Generated file(s):")
         for p in outputs:

@@ -17,7 +17,7 @@
 <body>
   <div class="container">
     <h1>PDF Preview Animator</h1>
-    <p>Upload a PDF to generate a short animated preview as GIF or MP4.</p>
+    <p>Upload a PDF to generate a short animated preview as GIF or MP4 with bright, smooth crossfade transitions.</p>
 
     {% if error %}
     <div class="alert">{{ error }}</div>
@@ -36,8 +36,12 @@
         <label><input type="radio" name="format" value="mp4"> MP4</label>
       </div>
 
-      <label for="dimensions">Dimensions (Width x Height)</label>
-      <input id="dimensions" name="dimensions" type="text" value="480x640" placeholder="e.g., 480x640">
+      <label>Size</label>
+      <div class="radio-group">
+        <label><input type="radio" name="size" value="small"> Small (320×480)</label>
+        <label><input type="radio" name="size" value="medium" checked> Medium (480×640)</label>
+        <label><input type="radio" name="size" value="large"> Large (720×960)</label>
+      </div>
 
       <button type="submit">Generate Preview</button>
     </form>

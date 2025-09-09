@@ -15,6 +15,19 @@ class PDFValidationError(ValueError):
 
 
 def _parse_dimensions(dimensions: str) -> Tuple[int, int]:
+    """Parse dimensions from preset size or custom format."""
+    # Handle preset sizes
+    presets = {
+        "small": (320, 480),   # Mobile-friendly size
+        "medium": (480, 640),  # Default balanced size
+        "large": (720, 960)    # High quality size
+    }
+    
+    dimensions_lower = dimensions.lower()
+    if dimensions_lower in presets:
+        return presets[dimensions_lower]
+    
+    # Fallback to custom format for backward compatibility
     try:
         w_str, h_str = dimensions.lower().split("x")
         w, h = int(w_str), int(h_str)
@@ -22,7 +35,7 @@ def _parse_dimensions(dimensions: str) -> Tuple[int, int]:
             raise ValueError
         return w, h
     except Exception:
-        raise ValueError('Invalid dimensions. Expected format "WIDTHxHEIGHT", e.g., "480x640".')
+        raise ValueError('Invalid dimensions. Use "small", "medium", "large", or custom format "WIDTHxHEIGHT".')
 
 
 def _validate_pdf(pdf_path: str, max_size_bytes: int = 25 * 1024 * 1024, max_pages: int = 100) -> None:
@@ -116,7 +129,7 @@ def generate_preview(
     output_basename: str,
     max_duration: float = 10.0,
     format: Literal["gif", "mp4", "all"] = "gif",
-    dimensions: str = "480x640",
+    dimensions: str = "medium",
     crossfade: float = 0.15,
     fps_gif: int = 15,
     fps_mp4: int = 24,
@@ -129,7 +142,10 @@ def generate_preview(
         output_basename: Base path (without extension) for output files.
         max_duration: Maximum duration in seconds for the animation.
         format: "gif", "mp4", or "all".
-        dimensions: "WIDTHxHEIGHT" string, e.g., "480x640".
+        dimensions: Preset size ("small", "medium", "large") or custom "WIDTHxHEIGHT".
+                   - "small": 320x480 (mobile-friendly)
+                   - "medium": 480x640 (balanced default) 
+                   - "large": 720x960 (high quality)
         crossfade: Crossfade duration between pages in seconds (0.1 to 0.2 suggested).
         fps_gif: Frame rate for GIF output.
         fps_mp4: Frame rate for MP4 output.
@@ -173,19 +189,23 @@ def generate_preview(
             pass
         clips.append(clip)
 
-    # Crossfade via CompositeVideoClip with overlapping starts
+    # Create smooth crossfade using CrossFadeIn for bright transitions
     if len(clips) == 1 or crossfade <= 0:
         final = CompositeVideoClip([clips[0].with_start(0)], size=(target_w, target_h), bg_color=(255, 255, 255)).with_duration(per_page)
     else:
         placed = []
         for i, c in enumerate(clips):
             start = i * (per_page - crossfade)
+            c = c.with_start(start)
+            
             if i > 0:
-                c = c.with_start(start).with_effects([moviepy.vfx.FadeIn(crossfade)])
-            else:
-                c = c.with_start(start)
+                # Use CrossFadeIn for smooth, bright transitions
+                c = c.with_effects([moviepy.vfx.CrossFadeIn(crossfade)])
+            
             placed.append(c)
+        
         total_duration = (len(clips) - 1) * (per_page - crossfade) + per_page
+        # Ensure bright white background throughout
         final = CompositeVideoClip(placed, size=(target_w, target_h), bg_color=(255, 255, 255)).with_duration(total_duration)
 
 
