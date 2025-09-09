@@ -1,0 +1,6 @@
+Flask>=3.0.0
+numpy>=1.23
+PyMuPDF>=1.22.5
+moviepy>=1.0.3
+imageio>=2.31
+imageio-ffmpeg>=0.4.9

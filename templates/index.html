@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>PDF Preview Animator</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const form = document.getElementById('upload-form');
+      form.addEventListener('submit', function() {
+        document.getElementById('spinner').classList.remove('hidden');
+      });
+    });
+  </script>
+</head>
+<body>
+  <div class="container">
+    <h1>PDF Preview Animator</h1>
+    <p>Upload a PDF to generate a short animated preview as GIF or MP4.</p>
+
+    {% if error %}
+    <div class="alert">{{ error }}</div>
+    {% endif %}
+
+    <form id="upload-form" method="POST" enctype="multipart/form-data" class="card">
+      <label for="file">PDF File</label>
+      <input id="file" name="file" type="file" accept=".pdf" required>
+
+      <label for="max_duration">Max Duration (seconds)</label>
+      <input id="max_duration" name="max_duration" type="number" min="3" max="15" step="1" value="10">
+
+      <label>Format</label>
+      <div class="radio-group">
+        <label><input type="radio" name="format" value="gif" checked> GIF</label>
+        <label><input type="radio" name="format" value="mp4"> MP4</label>
+      </div>
+
+      <label for="dimensions">Dimensions (Width x Height)</label>
+      <input id="dimensions" name="dimensions" type="text" value="480x640" placeholder="e.g., 480x640">
+
+      <button type="submit">Generate Preview</button>
+    </form>
+
+    <div id="spinner" class="spinner hidden">
+      <div class="loader"></div>
+      <div>Generating preview, please wait...</div>
+    </div>
+  </div>
+</body>
+</html>
