@@ -5,8 +5,9 @@ from typing import List, Tuple, Literal, Optional
 
 import numpy as np
 import fitz  # PyMuPDF
-from moviepy import ImageClip, CompositeVideoClip
+
 import moviepy
+from moviepy import ImageClip, CompositeVideoClip
 
 
 class PDFValidationError(ValueError):
@@ -174,7 +175,7 @@ def generate_preview(
 
     # Crossfade via CompositeVideoClip with overlapping starts
     if len(clips) == 1 or crossfade <= 0:
-        final = CompositeVideoClip([clips[0].with_start(0)], size=(target_w, target_h)).with_duration(per_page)
+        final = CompositeVideoClip([clips[0].with_start(0)], size=(target_w, target_h), bg_color=(255, 255, 255)).with_duration(per_page)
     else:
         placed = []
         for i, c in enumerate(clips):
@@ -185,7 +186,8 @@ def generate_preview(
                 c = c.with_start(start)
             placed.append(c)
         total_duration = (len(clips) - 1) * (per_page - crossfade) + per_page
-        final = CompositeVideoClip(placed, size=(target_w, target_h)).with_duration(total_duration)
+        final = CompositeVideoClip(placed, size=(target_w, target_h), bg_color=(255, 255, 255)).with_duration(total_duration)
+
 
     # Write outputs
     output_dir = os.path.dirname(output_basename)
