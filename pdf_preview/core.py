@@ -5,7 +5,8 @@ from typing import List, Tuple, Literal, Optional
 
 import numpy as np
 import fitz  # PyMuPDF
-from moviepy.editor import ImageClip, CompositeVideoClip
+from moviepy import ImageClip, CompositeVideoClip
+import moviepy
 
 
 class PDFValidationError(ValueError):
@@ -165,7 +166,7 @@ def generate_preview(
     # Build ImageClips with durations
     clips: List[ImageClip] = []
     for i, frame in enumerate(frames):
-        clip = ImageClip(frame).set_duration(per_page)
+        clip = ImageClip(frame).with_duration(per_page)
         if i > 0 and crossfade > 0:
             # We'll apply crossfade-in via CompositeVideoClip start times later
             pass
@@ -173,21 +174,23 @@ def generate_preview(
 
     # Crossfade via CompositeVideoClip with overlapping starts
     if len(clips) == 1 or crossfade <= 0:
-        final = CompositeVideoClip([clips[0].set_start(0)], size=(target_w, target_h)).set_duration(per_page)
+        final = CompositeVideoClip([clips[0].with_start(0)], size=(target_w, target_h)).with_duration(per_page)
     else:
         placed = []
         for i, c in enumerate(clips):
             start = i * (per_page - crossfade)
             if i > 0:
-                c = c.set_start(start).crossfadein(crossfade)
+                c = c.with_start(start).with_effects([moviepy.vfx.FadeIn(crossfade)])
             else:
-                c = c.set_start(start)
+                c = c.with_start(start)
             placed.append(c)
         total_duration = (len(clips) - 1) * (per_page - crossfade) + per_page
-        final = CompositeVideoClip(placed, size=(target_w, target_h)).set_duration(total_duration)
+        final = CompositeVideoClip(placed, size=(target_w, target_h)).with_duration(total_duration)
 
     # Write outputs
-    os.makedirs(os.path.dirname(output_basename), exist_ok=True)
+    output_dir = os.path.dirname(output_basename)
+    if output_dir:  # Only create directory if there's a directory component
+        os.makedirs(output_dir, exist_ok=True)
     fmt = format.lower()
     if fmt not in {"gif", "mp4", "all"}:
         raise ValueError('format must be one of: "gif", "mp4", "all".')
@@ -199,7 +202,7 @@ def generate_preview(
 
     if fmt in {"mp4", "all"}:
         mp4_path = f"{output_basename}.mp4"
-        final.write_videofile(mp4_path, codec="libx264", audio=False, fps=fps_mp4, preset="medium", threads=os.cpu_count() or 1)
+        final.write_videofile(mp4_path, codec="libx264", audio=False, fps=fps_mp4)
         outputs.append(mp4_path)
 
     final.close()
